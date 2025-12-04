@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse
 from .forms import CustomUserCreationForm
+from .models import *
 
 def home(request):
     return render(request, 'main/home.html')
@@ -47,7 +49,17 @@ def logout_view(request):
 
 @login_required
 def profile_view(request):
-    """Страница профиля (только для авторизованных пользователей)"""
-    return render(request, 'main/profile.html', {'user': request.user})
+    return render(request, 'main/profile.html')
+
+
+def create_allergen(request):
+    if request.method == 'POST':
+        name_ = request.POST.get("name").strip()
+    if not name_:
+        messages.error(request, "Название аллергена не может быть пустым")
+        return render(request, 'main/create_allergen.html')
+    #проверяем, что в базе нет такого аллергена
+    if Allergen.objects.filter(name=name_).exists():
+        messages.warning(request, "Такой аллерген уже существует")
 
 

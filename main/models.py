@@ -15,6 +15,8 @@ class User(models.Model):
 
 class Allergen(models.Model):
     name = models.TextField(verbose_name='Название аллергена')
+    is_global = models.BooleanField(verbose_name='Глобальный аллерген')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Создал')
 
     def __str__(self):
         return self.name
@@ -22,6 +24,18 @@ class Allergen(models.Model):
     class Meta:
         verbose_name = 'Аллерген'
         verbose_name_plural = 'Аллергены'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'created_by'],
+                condition=models.Q(is_global=False),
+                name='unique_user_allergen'
+            ),
+            models.UniqueConstraint(
+                fields=['name'],
+                condition=models.Q(is_global=True),
+                name='unique_global_allergen'
+            )
+        ]
 
 class Dish(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', null=False)
