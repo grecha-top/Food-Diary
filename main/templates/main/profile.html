@@ -1,0 +1,16 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Профиль пользователя{% endblock %}
+
+{% block content %}
+<h1>Ваш профиль</h1>
+
+<div style="background: #f8f9fa; padding: 20px; border-radius: 5px;">
+    <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email|default:"Не указан" }}</p>
+    <p><strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y H:i" }}</p>
+    <p><strong>Последний вход:</strong> {{ user.last_login|date:"d.m.Y H:i" }}</p>
+</div>
+
+<a href="{% url 'logout' %}">Выйти из системы</a>
+{% endblock %}

@@ -1,6 +1,9 @@
 from django import forms
 from django.contrib.auth.hashers import make_password
 from .models import User
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
 class UserAdminForm(forms.ModelForm):
     # Добавляем поле для ввода обычного пароля
@@ -32,3 +35,22 @@ class UserAdminForm(forms.ModelForm):
             if len(password) < 6:
                 raise forms.ValidationError('Пароль должен быть не короче 6 символов.')
         return cleaned_data
+    
+
+class CustomUserCreationForm(UserCreationForm):
+    email = forms.EmailField(
+        required=True,
+        label="Email",
+        help_text="Обязательное поле при регистрации"
+    )
+
+    class Meta:
+        model = User
+        fields = ("username", "email", "password1", "password2")
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data["email"]
+        if commit:
+            user.save()
+        return user
