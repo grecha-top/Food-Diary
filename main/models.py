@@ -5,6 +5,7 @@ class User(models.Model):
     login = models.TextField(max_length=100, verbose_name='Логин', unique=True, null=False)
     hashed_password = models.TextField(verbose_name='Зашифрованный пароль', null=False)
     date_registration = models.DateTimeField(auto_now_add=True, verbose_name='Дата регистрации', null=True)
+    is_staff = models.BooleanField(verbose_name='Администратор', null=False, default=False)
 
     def __str__(self):
         return self.login
