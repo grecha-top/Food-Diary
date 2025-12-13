@@ -1,9 +1,8 @@
 from django import forms
 from django.contrib.auth.hashers import make_password
-from .models import User, Allergen
-from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import Allergen, Dish
 
 class UserAdminForm(forms.ModelForm):
     password = forms.CharField(
@@ -88,3 +87,32 @@ class UserAllergenForm(forms.ModelForm):
         ).exists():
             raise forms.ValidationError("У вас уже есть аллерген с таким названием.")
         return name
+    
+class DishForm(forms.ModelForm):
+    """Форма блюда с выбором нескольких аллергенов."""
+
+    allergens = forms.ModelMultipleChoiceField(
+        queryset=Allergen.objects.none(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        base_qs = Allergen.objects.filter(is_global=True)
+        if user is not None:
+            base_qs = Allergen.objects.filter(is_global=True) | Allergen.objects.filter(created_by=user)
+        self.fields['allergens'].queryset = base_qs.order_by('name')
+
+    class Meta:
+        model = Dish
+        fields = ['name', 'description', 'calories', 'proteins', 'fats', 'carbohydrates', 'url', 'allergens']
+        widgets = {
+            'name': forms.TextInput(),
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'calories': forms.NumberInput(),
+            'proteins': forms.NumberInput(),
+            'fats': forms.NumberInput(),
+            'carbohydrates': forms.NumberInput(),
+            'url': forms.URLInput(),
+        }

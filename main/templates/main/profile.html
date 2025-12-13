@@ -3,14 +3,32 @@
 {% block title %}Профиль пользователя{% endblock %}
 
 {% block content %}
-<h1>Ваш профиль</h1>
+<section class="card" style="max-width: 720px; margin: 0 auto;">
+    <h1 class="title">Ваш профиль</h1>
+    <p class="lead">Основные данные аккаунта и дата активности.</p>
 
-<div style="background: #f8f9fa; padding: 20px; border-radius: 5px;">
-    <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
-    <p><strong>Email:</strong> {{ user.email|default:"Не указан" }}</p>
-    <p><strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y H:i" }}</p>
-    <p><strong>Последний вход:</strong> {{ user.last_login|date:"d.m.Y H:i" }}</p>
-</div>
+    <div class="grid cols-2" style="margin-top: 12px;">
+        <div class="stat">
+            <span class="label">Имя пользователя</span>
+            <span class="value">{{ user.username }}</span>
+        </div>
+        <div class="stat">
+            <span class="label">Email</span>
+            <span class="value">{{ user.email|default:"Не указан" }}</span>
+        </div>
+        <div class="stat">
+            <span class="label">Регистрация</span>
+            <span class="value">{{ user.date_joined|date:"d.m.Y H:i" }}</span>
+        </div>
+        <div class="stat">
+            <span class="label">Последний вход</span>
+            <span class="value">{{ user.last_login|date:"d.m.Y H:i" }}</span>
+        </div>
+    </div>
 
-<a href="{% url 'logout' %}">Выйти из системы</a>
+    <div class="inline-actions" style="margin-top: 18px;">
+        <a class="btn btn-ghost" href="{% url 'home' %}">На главную</a>
+        <a class="btn btn-primary" href="{% url 'logout' %}">Выйти</a>
+    </div>
+</section>
 {% endblock %}

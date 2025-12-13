@@ -1,8 +1,55 @@
 {% extends 'main/base.html' %}
 
-{% block title %}"Дневник питания"{% endblock %}
+{% block title %}Дневник питания{% endblock %}
 
 {% block content %}
-<h1>Добро пожаловать в "Дневник питания"!</h1>
+<section class="card hero glow">
+    <div class="grid cols-2">
+        <div>
+            <h1 class="title gradient-text">Добро пожаловать в «Дневник питания»</h1>
+            <p class="lead">Отслеживайте блюда, управляйте аллергенами и держите питание под контролем в современном и насыщенном интерфейсе.</p>
+            <div class="inline-actions">
+                {% if user.is_authenticated %}
+                    <a class="btn btn-primary" href="{% url 'create_dish' %}">Добавить блюдо</a>
+                    <a class="btn btn-ghost" href="{% url 'user_create_allergen' %}">Управлять аллергенами</a>
+                    {% if user.is_staff %}
+                        <span class="pill">Режим администратора</span>
+                    {% endif %}
+                {% else %}
+                    <a class="btn btn-primary" href="{% url 'register' %}">Создать аккаунт</a>
+                    <a class="btn btn-ghost" href="{% url 'login' %}">Уже есть аккаунт</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="grid cols-2 card glow">
+            <div class="stat">
+                <span class="value">Блюда</span>
+                <span class="label">Сохраняйте рецепты, калории и нутриенты</span>
+            </div>
+            <div class="stat">
+                <span class="value">Аллергены</span>
+                <span class="label">Личные и глобальные списки для безопасности</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="grid cols-3" style="margin-top: 18px;">
+    <div class="card glow">
+        <p class="pill">1 шаг</p>
+        <h3 style="margin: 0 0 6px;">Заводите блюда</h3>
+        <p class="muted">Добавляйте описание, калории, БЖУ и ссылку на рецепт — все в одном месте.</p>
+    </div>
+    <div class="card glow">
+        <p class="pill">2 шаг</p>
+        <h3 style="margin: 0 0 6px;">Укажите аллергены</h3>
+        <p class="muted">Создавайте свои аллергены или используйте глобальные, чтобы не забыть о важных ограничениях.</p>
+    </div>
+    <div class="card glow">
+        <p class="pill">3 шаг</p>
+        <h3 style="margin: 0 0 6px;">Контролируйте питание</h3>
+        <p class="muted">Возвращайтесь к профилю, чтобы видеть ваши данные и быстро продолжать работу.</p>
+    </div>
+</section>
 
 {% endblock %}

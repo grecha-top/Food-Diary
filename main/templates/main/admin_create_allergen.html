@@ -1,16 +1,34 @@
-<h2>🔧 Добавить глобальный аллерген (только для администраторов)</h2>
+{% extends 'main/base.html' %}
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Добавить глобальный аллерген</button>
-</form>
+{% block title %}Глобальные аллергены{% endblock %}
 
-<h3>Существующие глобальные аллергены:</h3>
-<ul>
-{% for a in allergens %}
-    <li>🌐 {{ a.name }} <small>(добавил: {{ a.created_by.username }})</small></li>
-{% empty %}
-    <li>Нет глобальных аллергенов</li>
-{% endfor %}
-</ul>
+{% block content %}
+<section class="card" style="max-width: 860px; margin: 0 auto;">
+    <div class="inline-actions" style="justify-content: space-between; align-items: baseline;">
+        <div>
+            <p class="pill">Администратор</p>
+            <h2 class="title" style="margin: 6px 0 0;">Добавить глобальный аллерген</h2>
+            <p class="muted" style="margin-top: 6px;">Глобальные аллергены доступны всем пользователям сервиса.</p>
+        </div>
+        <a class="back-link" href="{% url 'home' %}">← В основное меню</a>
+    </div>
+
+    <form method="post" style="margin-top: 16px;">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn btn-primary" type="submit">Добавить глобальный аллерген</button>
+    </form>
+
+    <h3 class="section-title">Существующие глобальные аллергены</h3>
+    <ul class="chip-list">
+        {% for a in allergens %}
+            <li>
+                {{ a.name }}
+                <span class="badge">добавил: {{ a.created_by.username }}</span>
+            </li>
+        {% empty %}
+            <li class="muted">Нет глобальных аллергенов</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

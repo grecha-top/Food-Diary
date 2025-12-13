@@ -4,6 +4,8 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .forms import *
 from .models import *
 
@@ -75,7 +77,7 @@ def admin_create_allergen(request):
 @login_required
 def user_create_allergen(request):
     if request.method == 'POST':
-        form = UserAllergenForm(request.POST)
+        form = UserAllergenForm(request.POST, user=request.user)
         if form.is_valid():
             allergen = form.save(commit=False)
             allergen.is_global = False
@@ -84,7 +86,34 @@ def user_create_allergen(request):
             messages.success(request, f"User's allergen {allergen.name} was successfully created")
             return redirect('user_create_allergen')
     else:
-        form = UserAllergenForm()
-    user_allergens = Allergen.objects.filter(is_global=False).order_by('name')
+        form = UserAllergenForm(user=request.user)
+    user_allergens = Allergen.objects.filter(is_global=False, created_by=request.user).order_by('name')
     return render(request, 'main/user_create_allergen.html', {'form': form, 'allergens': user_allergens})
+
+@login_required
+def create_dish(request):
+    if request.method == 'POST':
+        form = DishForm(request.POST, user=request.user)
+        if form.is_valid():
+            dish = form.save(commit=False)
+            dish.user = request.user
+            dish.save()
+            form.save_m2m()
+            messages.success(request, f"User's dish {dish.name} was successfully created")
+            return redirect('create_dish')
+    else:
+        form = DishForm(user=request.user)
+    return render(request, 'main/dish_form.html', {'form': form})
+
+
+class DishesListView(LoginRequiredMixin, ListView):
+    template_name = 'main/dishes.html'
+    context_object_name = 'dishes'
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        return Dish.objects.filter(user=self.request.user).order_by('-created_at')
+    
+    
+
 

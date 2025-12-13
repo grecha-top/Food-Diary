@@ -7,6 +7,8 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile_view, name='profile'),
-    path('admin/allergen/add', views.admin_create_allergen, name='admin_create_allergen'),
-    path('my/allergen/add', views.user_create_allergen, name='user_create_allergen')
+    path('allergens/global/add/', views.admin_create_allergen, name='admin_create_allergen'),
+    path('my/allergen/add', views.user_create_allergen, name='user_create_allergen'),
+    path('dishes/create/', views.create_dish, name='create_dish'),
+    path('dishes/', views.DishesListView.as_view(), name='dishes')
 ]
