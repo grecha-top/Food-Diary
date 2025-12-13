@@ -115,44 +115,76 @@
         </div>
         {% endif %}
         
-        <!-- Сортировка -->
+        <!-- Сортировка с фиолетовым фоном -->
         <div class="form-group">
             <label class="form-label">Сортировка</label>
-            <select name="sort_by" class="form-control">
-                <option value="-created_at" {% if current_sort == "-created_at" or not current_sort %}selected{% endif %}>
+            <select name="sort_by" class="form-control" style="
+                background-color: #7c3aed;
+                color: white;
+                border: 1px solid #8b5cf6;
+                padding: 8px 12px;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            ">
+                <option value="-created_at" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-created_at" or not current_sort %}selected{% endif %}>
                     Новые сначала
                 </option>
-                <option value="created_at" {% if current_sort == "created_at" %}selected{% endif %}>
+                <option value="created_at" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "created_at" %}selected{% endif %}>
                     Старые сначала
                 </option>
-                <option value="name" {% if current_sort == "name" %}selected{% endif %}>
+                <option value="name" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "name" %}selected{% endif %}>
                     Название А-Я
                 </option>
-                <option value="-name" {% if current_sort == "-name" %}selected{% endif %}>
+                <option value="-name" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-name" %}selected{% endif %}>
                     Название Я-А
                 </option>
-                <option value="calories" {% if current_sort == "calories" %}selected{% endif %}>
+                <option value="calories" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "calories" %}selected{% endif %}>
                     Калории (по возрастанию)
                 </option>
-                <option value="-calories" {% if current_sort == "-calories" %}selected{% endif %}>
+                <option value="-calories" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-calories" %}selected{% endif %}>
                     Калории (по убыванию)
                 </option>
-                <option value="protein" {% if current_sort == "protein" %}selected{% endif %}>
+                <option value="protein" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "protein" %}selected{% endif %}>
                     Белки (по возрастанию)
                 </option>
-                <option value="-protein" {% if current_sort == "-protein" %}selected{% endif %}>
+                <option value="-protein" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-protein" %}selected{% endif %}>
                     Белки (по убыванию)
                 </option>
-                <option value="fat" {% if current_sort == "fat" %}selected{% endif %}>
+                <option value="fat" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "fat" %}selected{% endif %}>
                     Жиры (по возрастанию)
                 </option>
-                <option value="-fat" {% if current_sort == "-fat" %}selected{% endif %}>
+                <option value="-fat" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-fat" %}selected{% endif %}>
                     Жиры (по убыванию)
                 </option>
-                <option value="carbohydrates" {% if current_sort == "carbohydrates" %}selected{% endif %}>
+                <option value="carbohydrates" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "carbohydrates" %}selected{% endif %}>
                     Углеводы (по возрастанию)
                 </option>
-                <option value="-carbohydrates" {% if current_sort == "-carbohydrates" %}selected{% endif %}>
+                <option value="-carbohydrates" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-carbohydrates" %}selected{% endif %}>
                     Углеводы (по убыванию)
                 </option>
             </select>
@@ -164,6 +196,23 @@
             <a href="{% url 'dishes' %}" class="btn btn-ghost">Сбросить</a>
         </div>
     </form>
+    
+    <!-- CSS стили для выпадающего списка -->
+    <style>
+        select[name="sort_by"] option {
+            background-color: #7c3aed !important;
+            color: white !important;
+        }
+        
+        select[name="sort_by"]:hover {
+            background-color: #6d28d9 !important;
+        }
+        
+        select[name="sort_by"]:focus {
+            outline: 2px solid #8b5cf6;
+            outline-offset: 2px;
+        }
+    </style>
 </section>
 
 {% if dishes %}
@@ -238,7 +287,7 @@
             <div class="stat">
                 <span class="label">Белки · Жиры · Углеводы</span>
                 <span class="value">
-                    {{ dish.protein|default:"—" }} · {{ dish.fat|default:"—" }} · {{ dish.carbohydrates|default:"—" }}
+                    {{ dish.proteins|default:"—" }} · {{ dish.fats|default:"—" }} · {{ dish.carbohydrates|default:"—" }}
                 </span>
             </div>
         </div>
