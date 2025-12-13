@@ -110,6 +110,8 @@ from django.views.generic import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from .models import Dish
+import re
+from django.db.models.functions import Lower
 
 class DishesListView(LoginRequiredMixin, ListView):
     template_name = 'main/dishes.html'
@@ -119,21 +121,29 @@ class DishesListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = Dish.objects.filter(user=self.request.user)
         
-        # Применяем фильтры
-        queryset = self.apply_filters(queryset)
+        name = self.request.GET.get('name')
+        if name:
+            name_lower = name.lower()
+            queryset = [
+                dish for dish in queryset
+                if name_lower in dish.name.lower()
+            ]
+            from django.db.models import Q
+            dish_ids = [dish.id for dish in queryset]
+            queryset = Dish.objects.filter(id__in=dish_ids)
         
-        # Применяем сортировку
         queryset = self.apply_sorting(queryset)
-        
         return queryset
     
     def apply_filters(self, queryset):
-        # Фильтр по названию
         name = self.request.GET.get('name')
         if name:
-            queryset = queryset.filter(name__icontains=name)
-        
-        # Фильтры по диапазонам КБЖУ
+            name_lower = name.lower()
+            queryset = queryset.extra(
+                where=["LOWER(name) LIKE %s"],
+                params=[f'%{name_lower}%']
+            )
+            return queryset
         filters_map = {
             'calories': ('calories_min', 'calories_max'),
             'proteins': ('protein_min', 'protein_max'),
@@ -158,7 +168,6 @@ class DishesListView(LoginRequiredMixin, ListView):
                     pass
 
         
-        # Фильтр по дате создания
         created_after = self.request.GET.get('created_after')
         created_before = self.request.GET.get('created_before')
         
@@ -173,7 +182,6 @@ class DishesListView(LoginRequiredMixin, ListView):
     def apply_sorting(self, queryset):
         sort_by = self.request.GET.get('sort_by', '-created_at')
         
-        # Безопасный список полей для сортировки
         valid_sort_fields = {
             'name', '-name',
             'calories', '-calories',
@@ -192,13 +200,11 @@ class DishesListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         
 
-        # Добавляем текущие значения фильтров для формы
         for key in ['name', 'calories_min', 'calories_max', 'protein_min', 
                     'protein_max', 'fat_min', 'fat_max', 'carbs_min', 
                     'carbs_max', 'created_after', 'created_before', 'sort_by']:
             context[f'current_{key}'] = self.request.GET.get(key, '')
         
-        # Статистика по текущему набору
         filtered_dishes = context['dishes']
         if filtered_dishes:
             context['avg_calories'] = sum(d.calories for d in filtered_dishes) / len(filtered_dishes)
@@ -206,7 +212,6 @@ class DishesListView(LoginRequiredMixin, ListView):
             context['avg_fat'] = sum(d.fats for d in filtered_dishes) / len(filtered_dishes)
             context['avg_carbs'] = sum(d.carbohydrates for d in filtered_dishes) / len(filtered_dishes)
         
-        # Опции сортировки
         context['sort_options'] = [
             {'value': '-created_at', 'label': 'Новые сначала'},
             {'value': 'created_at', 'label': 'Старые сначала'},
