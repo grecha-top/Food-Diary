@@ -1,30 +1,67 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Каталог товаров{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Дневник питания{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'main/style.css' %}">
 </head>
 <body>
-    <nav style="background: #f8f9fa; padding: 1rem;">
-        <a href="{% url 'home' %}">Главная</a> |
-        
-        <div style="float: right;">
-            {% if user.is_authenticated %}
-                <!-- Отображение для авторизованного пользователя -->
-                Привет, {{ user.username }}! |
-                <a href="{% url 'profile' %}">Профиль</a> |
-                <a href="{% url 'logout' %}">Выйти</a>
-            {% else %}
-                <!-- Отображение для неавторизованного пользователя -->
-                <a href="{% url 'login' %}">Войти</a> |
-                <a href="{% url 'register' %}">Регистрация</a>
+    <div class="page">
+        <header class="navbar">
+            <div class="navbar__brand">
+                <a href="{% url 'home' %}" class="brand">Дневник питания</a>
+                <span class="tagline">Контроль питания и аллергенов</span>
+            </div>
+            <div class="navbar__links">
+                <a href="{% url 'home' %}" class="nav-link">Главная</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile' %}" class="nav-link">Профиль</a>
+                    <a href="{% url 'dishes' %}" class="nav-link">Мои блюда</a>
+                    <a href="{% url 'create_dish' %}" class="nav-link">Добавить блюдо</a>
+                    <a href="{% url 'user_create_allergen' %}" class="nav-link">Мои аллергены</a>
+                    {% if user.is_staff %}
+                        <a href="{% url 'admin_create_allergen' %}" class="nav-link">Глобальные аллергены</a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="btn btn-ghost">Выйти</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-ghost">Войти</a>
+                    <a href="{% url 'register' %}" class="btn btn-primary">Регистрация</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <main class="content container">
+            {% if messages %}
+                <div class="alerts">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
             {% endif %}
-        </div>
-    </nav>
-    
-    <div style="padding: 20px;">
-        {% block content %}
-        {% endblock %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="footer">
+            <div class="container footer__inner">
+                <span>Дневник питания · забота о здоровье каждый день</span>
+                <span class="footer__links">
+                    <a href="{% url 'home' %}">Главная</a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'profile' %}">Профиль</a>
+                    {% else %}
+                        <a href="{% url 'login' %}">Войти</a>
+                    {% endif %}
+                </span>
+            </div>
+        </footer>
     </div>
 </body>
 </html>

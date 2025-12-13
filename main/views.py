@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
 from django.http import HttpResponse
-from .forms import CustomUserCreationForm
+from .forms import *
 from .models import *
 
 def home(request):
@@ -51,15 +51,40 @@ def logout_view(request):
 def profile_view(request):
     return render(request, 'main/profile.html')
 
+def staff_required(user):
+    return user.is_staff
 
-def create_allergen(request):
+@login_required
+@user_passes_test(staff_required, login_url='/login/')
+def admin_create_allergen(request):
     if request.method == 'POST':
-        name_ = request.POST.get("name").strip()
-    if not name_:
-        messages.error(request, "Название аллергена не может быть пустым")
-        return render(request, 'main/create_allergen.html')
-    #проверяем, что в базе нет такого аллергена
-    if Allergen.objects.filter(name=name_).exists():
-        messages.warning(request, "Такой аллерген уже существует")
+        form = GlobalAllergenForm(request.POST)
+        if form.is_valid():
+            allergen = form.save(commit=False)
+            allergen.is_global = True
+            allergen.created_by = request.user
+            allergen.save()
+            messages.success(request, f"Глобальный аллерген {allergen.name} успешно добавлен")
+            return redirect('admin_create_allergen')
+    else:
+        form = GlobalAllergenForm()
+    global_allergens = Allergen.objects.filter(is_global=True).order_by('name')
+    return render(request, 'main/admin_create_allergen.html', {'form': form, 'allergens': global_allergens})
 
+
+@login_required
+def user_create_allergen(request):
+    if request.method == 'POST':
+        form = UserAllergenForm(request.POST)
+        if form.is_valid():
+            allergen = form.save(commit=False)
+            allergen.is_global = False
+            allergen.created_by = request.user
+            allergen.save()
+            messages.success(request, f"User's allergen {allergen.name} was successfully created")
+            return redirect('user_create_allergen')
+    else:
+        form = UserAllergenForm()
+    user_allergens = Allergen.objects.filter(is_global=False).order_by('name')
+    return render(request, 'main/user_create_allergen.html', {'form': form, 'allergens': user_allergens})
 

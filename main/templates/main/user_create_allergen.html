@@ -1,0 +1,16 @@
+<h2>➕ Добавить свой аллерген</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Добавить мой аллерген</button>
+</form>
+
+<h3>Ваши аллергены:</h3>
+<ul>
+{% for a in allergens %}
+    <li>👤 {{ a.name }} <small>({{ a.created_at|date:"d.m.Y" }})</small></li>
+{% empty %}
+    <li>У вас пока нет своих аллергенов</li>
+{% endfor %}
+</ul>

@@ -1,12 +1,11 @@
 from django import forms
 from django.contrib.auth.hashers import make_password
-from .models import User
+from .models import User, Allergen
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
 class UserAdminForm(forms.ModelForm):
-    # Добавляем поле для ввода обычного пароля
     password = forms.CharField(
         label='Пароль',
         widget=forms.PasswordInput,
@@ -21,7 +20,6 @@ class UserAdminForm(forms.ModelForm):
     class Meta:
         model = User
         fields = '__all__'
-        # Исключаем hashed_password из формы — оно только для БД
         exclude = ('hashed_password',)
 
     def clean(self):
@@ -54,3 +52,39 @@ class CustomUserCreationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+    
+class GlobalAllergenForm(forms.ModelForm):
+    class Meta:
+        model = Allergen
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'autofocus': True}),
+        }
+
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip()
+        if Allergen.objects.filter(name__iexact=name, is_global=True).exists():
+            raise forms.ValidationError("Глобальный аллерген с таким названием уже существует.")
+        return name
+    
+class UserAllergenForm(forms.ModelForm):
+    class Meta:
+        model = Allergen
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'autofocus': True}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip()
+        if Allergen.objects.filter(
+            name__iexact=name,
+            is_global=False,
+            created_by=self.user
+        ).exists():
+            raise forms.ValidationError("У вас уже есть аллерген с таким названием.")
+        return name

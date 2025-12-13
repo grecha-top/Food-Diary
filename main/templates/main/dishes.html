@@ -1,0 +1,92 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Мои блюда{% endblock %}
+
+{% block content %}
+<section class="card hero glow">
+    <div class="grid cols-2">
+        <div>
+            <h1 class="title gradient-text">Мои блюда</h1>
+            <p class="lead">Все ваши сохранённые блюда с калориями, БЖУ и списком аллергенов в одном месте.</p>
+            <div class="inline-actions">
+                <a class="btn btn-primary" href="{% url 'create_dish' %}">Добавить блюдо</a>
+                <a class="btn btn-ghost" href="{% url 'user_create_allergen' %}">Настроить аллергены</a>
+            </div>
+        </div>
+        <div class="card glow">
+            <div class="stat">
+                <span class="label">Всего блюд</span>
+                <span class="value">{{ dishes|length }}</span>
+            </div>
+            <div class="stat">
+                <span class="label">Недавно добавлено</span>
+                <span class="value">
+                    {% if dishes %}
+                        {{ dishes.0.created_at|date:"d.m.Y H:i" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if dishes %}
+<section class="grid cols-2" style="margin-top: 20px;">
+    {% for dish in dishes %}
+    <article class="card glow">
+        <div class="inline-actions" style="justify-content: space-between; align-items: flex-start;">
+            <div>
+                <p class="pill">Добавлено {{ dish.created_at|date:"d.m.Y" }}</p>
+                <h2 class="title" style="margin: 8px 0 4px;">{{ dish.name }}</h2>
+                {% if dish.description %}
+                    <p class="muted" style="margin: 0 0 10px;">{{ dish.description }}</p>
+                {% endif %}
+            </div>
+            {% if dish.url %}
+                <a class="btn btn-ghost" href="{{ dish.url }}" target="_blank" rel="noopener">Рецепт</a>
+            {% endif %}
+        </div>
+
+        <div class="grid cols-2" style="margin-top: 8px;">
+            <div class="stat">
+                <span class="label">Калории</span>
+                <span class="value">{{ dish.calories|default:"—" }}</span>
+            </div>
+            <div class="stat">
+                <span class="label">Белки · Жиры · Углеводы</span>
+                <span class="value">
+                    {{ dish.proteins|default:"—" }} · {{ dish.fats|default:"—" }} · {{ dish.carbohydrates|default:"—" }}
+                </span>
+            </div>
+        </div>
+
+        <div style="margin-top: 12px;">
+            <p class="section-title" style="margin: 0 0 6px;">Аллергены</p>
+            {% if dish.allergens.all %}
+                <ul class="chip-list">
+                    {% for allergen in dish.allergens.all %}
+                        <li>{{ allergen.name }}</li>
+                    {% empty %}
+                        <li class="muted">Не указаны</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="muted">Не указаны</p>
+            {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<section class="card glow" style="margin-top: 16px; text-align: center;">
+    <h2 class="title" style="margin-bottom: 6px;">Пока нет блюд</h2>
+    <p class="muted">Добавьте своё первое блюдо и отслеживайте калории и аллергены.</p>
+    <div style="margin-top: 12px;">
+        <a class="btn btn-primary" href="{% url 'create_dish' %}">Добавить блюдо</a>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+

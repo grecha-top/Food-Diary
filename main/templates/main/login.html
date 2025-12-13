@@ -3,30 +3,27 @@
 {% block title %}Вход в систему{% endblock %}
 
 {% block content %}
-<h1>Вход в систему</h1>
+<section class="card" style="max-width: 520px; margin: 0 auto;">
+    <h1 class="title">Войти</h1>
+    <p class="lead">Продолжайте работу с дневником питания и управляйте своими данными.</p>
 
-<!-- Отображение ошибок аутентификации -->
-{% if error %}
-<div style="color: red; background: #ffe6e6; padding: 10px; margin: 10px 0;">
-    {{ error }}
-</div>
-{% endif %}
+    {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
 
-<form method="post">
-    {% csrf_token %}
-    
-    <div style="margin: 10px 0;">
-        <label>Имя пользователя:</label>
-        <input type="text" name="username" required>
-    </div>
-    
-    <div style="margin: 10px 0;">
-        <label>Пароль:</label>
-        <input type="password" name="password" required>
-    </div>
-    
-    <button type="submit">Войти</button>
-</form>
+    <form method="post">
+        {% csrf_token %}
+        <p>
+            <label>Имя пользователя</label>
+            <input type="text" name="username" required autocomplete="username">
+        </p>
+        <p>
+            <label>Пароль</label>
+            <input type="password" name="password" required autocomplete="current-password">
+        </p>
+        <button class="btn btn-primary" type="submit">Войти</button>
+    </form>
 
-<p>Нет аккаунта? <a href="{% url 'register' %}">Зарегистрируйтесь</a></p>
+    <p class="muted" style="margin-top: 12px;">Нет аккаунта? <a href="{% url 'register' %}">Создайте его</a></p>
+</section>
 {% endblock %}
