@@ -106,14 +106,120 @@ def create_dish(request):
     return render(request, 'main/dish_form.html', {'form': form})
 
 
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
+from .models import Dish
+
 class DishesListView(LoginRequiredMixin, ListView):
     template_name = 'main/dishes.html'
     context_object_name = 'dishes'
-    ordering = ['-created_at']
-
+    paginate_by = 10
+    
     def get_queryset(self):
-        return Dish.objects.filter(user=self.request.user).order_by('-created_at')
+        queryset = Dish.objects.filter(user=self.request.user)
+        
+        # Применяем фильтры
+        queryset = self.apply_filters(queryset)
+        
+        # Применяем сортировку
+        queryset = self.apply_sorting(queryset)
+        
+        return queryset
     
+    def apply_filters(self, queryset):
+        # Фильтр по названию
+        name = self.request.GET.get('name')
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+        
+        # Фильтры по диапазонам КБЖУ
+        filters_map = {
+            'calories': ('calories_min', 'calories_max'),
+            'proteins': ('protein_min', 'protein_max'),
+            'fats': ('fat_min', 'fat_max'),
+            'carbohydrates': ('carbs_min', 'carbs_max'),
+        }
+        
+        for field, (min_key, max_key) in filters_map.items():
+            min_value = self.request.GET.get(min_key)
+            max_value = self.request.GET.get(max_key)
+            
+            if min_value:
+                try:
+                    queryset = queryset.filter(**{f'{field}__gte': float(min_value)})
+                except (ValueError, TypeError):
+                    pass
+            
+            if max_value:
+                try:
+                    queryset = queryset.filter(**{f'{field}__lte': float(max_value)})
+                except (ValueError, TypeError):
+                    pass
+
+        
+        # Фильтр по дате создания
+        created_after = self.request.GET.get('created_after')
+        created_before = self.request.GET.get('created_before')
+        
+        if created_after:
+            queryset = queryset.filter(created_at__date__gte=created_after)
+        
+        if created_before:
+            queryset = queryset.filter(created_at__date__lte=created_before)
+        
+        return queryset
     
+    def apply_sorting(self, queryset):
+        sort_by = self.request.GET.get('sort_by', '-created_at')
+        
+        # Безопасный список полей для сортировки
+        valid_sort_fields = {
+            'name', '-name',
+            'calories', '-calories',
+            'proteins', '-proteins',
+            'fats', '-fats',
+            'carbohydrates', '-carbohydrates',
+            'created_at', '-created_at',
+        }
+        
+        if sort_by in valid_sort_fields:
+            return queryset.order_by(sort_by)
+        
+        return queryset.order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
 
-
+        # Добавляем текущие значения фильтров для формы
+        for key in ['name', 'calories_min', 'calories_max', 'protein_min', 
+                    'protein_max', 'fat_min', 'fat_max', 'carbs_min', 
+                    'carbs_max', 'created_after', 'created_before', 'sort_by']:
+            context[f'current_{key}'] = self.request.GET.get(key, '')
+        
+        # Статистика по текущему набору
+        filtered_dishes = context['dishes']
+        if filtered_dishes:
+            context['avg_calories'] = sum(d.calories for d in filtered_dishes) / len(filtered_dishes)
+            context['avg_protein'] = sum(d.proteins for d in filtered_dishes) / len(filtered_dishes)
+            context['avg_fat'] = sum(d.fats for d in filtered_dishes) / len(filtered_dishes)
+            context['avg_carbs'] = sum(d.carbohydrates for d in filtered_dishes) / len(filtered_dishes)
+        
+        # Опции сортировки
+        context['sort_options'] = [
+            {'value': '-created_at', 'label': 'Новые сначала'},
+            {'value': 'created_at', 'label': 'Старые сначала'},
+            {'value': 'name', 'label': 'Название А-Я'},
+            {'value': '-name', 'label': 'Название Я-А'},
+            {'value': 'calories', 'label': 'Калории ↑'},
+            {'value': '-calories', 'label': 'Калории ↓'},
+            {'value': 'protein', 'label': 'Белки ↑'},
+            {'value': '-protein', 'label': 'Белки ↓'},
+            {'value': 'fat', 'label': 'Жиры ↑'},
+            {'value': '-fat', 'label': 'Жиры ↓'},
+            {'value': 'carbohydrates', 'label': 'Углеводы ↑'},
+            {'value': '-carbohydrates', 'label': 'Углеводы ↓'},
+        ]
+        
+        return context
