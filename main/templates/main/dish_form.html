@@ -13,10 +13,161 @@
         <a class="back-link" href="{% url 'home' %}">← В основное меню</a>
     </div>
 
-    <form method="post" style="margin-top: 16px;">
+    <form method="post" enctype="multipart/form-data" style="margin-top: 16px;">
         {% csrf_token %}
+        
+        <!-- Поле для фото с кастомным оформлением -->
+        <div style="margin-bottom: 20px;">
+            <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 500;">
+                Фотография блюда
+            </label>
+            
+            <div style="
+                border: 2px dashed var(--border-color);
+                border-radius: 8px;
+                padding: 20px;
+                text-align: center;
+                background: var(--bg-secondary);
+                cursor: pointer;
+                transition: all 0.3s ease;
+                margin-bottom: 8px;
+            " onclick="document.getElementById('id_photo').click();">
+                
+                {% if form.instance.photo %}
+                <!-- Превью текущего фото -->
+                <img id="photo-preview" 
+                     src="{{ form.instance.photo.url }}" 
+                     alt="Текущее фото" 
+                     style="max-width: 100%; max-height: 200px; border-radius: 6px;">
+                <p style="margin-top: 8px; color: var(--text-secondary); font-size: 0.9rem;">
+                    Нажмите для изменения фото
+                </p>
+                {% else %}
+                <!-- Иконка загрузки -->
+                <div style="width: 80px; height: 80px; margin: 0 auto 12px; color: var(--text-muted);">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <p style="margin: 0; color: var(--text-secondary);">
+                    Нажмите для загрузки фото
+                </p>
+                <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.85rem;">
+                    JPG, PNG до 5MB
+                </p>
+                {% endif %}
+            </div>
+            
+            {{ form.photo }}
+            
+            {% if form.photo.errors %}
+            <div style="color: #ef4444; font-size: 0.85rem; margin-top: 4px;">
+                {{ form.photo.errors }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Остальные поля формы -->
         {{ form.as_p }}
+        
         <button class="btn btn-primary" type="submit">Сохранить блюдо</button>
     </form>
 </section>
+
+<!-- JavaScript для предпросмотра фото -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const photoInput = document.getElementById('id_photo');
+    const photoPreview = document.getElementById('photo-preview');
+    
+    photoInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                if (photoPreview) {
+                    photoPreview.src = e.target.result;
+                } else {
+                    // Создаем элемент для предпросмотра, если его нет
+                    const previewContainer = document.querySelector('[onclick*="id_photo"]');
+                    const oldImg = previewContainer.querySelector('img');
+                    if (oldImg) oldImg.remove();
+                    
+                    const newImg = document.createElement('img');
+                    newImg.id = 'photo-preview';
+                    newImg.src = e.target.result;
+                    newImg.style.maxWidth = '100%';
+                    newImg.style.maxHeight = '200px';
+                    newImg.style.borderRadius = '6px';
+                    newImg.alt = 'Предпросмотр фото';
+                    
+                    const iconDiv = previewContainer.querySelector('svg').parentElement;
+                    if (iconDiv) iconDiv.style.display = 'none';
+                    
+                    const textP = previewContainer.querySelectorAll('p')[0];
+                    if (textP) textP.textContent = 'Нажмите для изменения фото';
+                    
+                    previewContainer.insertBefore(newImg, previewContainer.firstChild);
+                }
+            }
+            
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+});
+</script>
+
+<style>
+/* Скрываем стандартный input file */
+#id_photo {
+    display: none;
+}
+
+/* Стили для остальных полей формы (если нужно) */
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Стили для текстовых полей и textarea */
+input[type="text"],
+input[type="number"],
+input[type="url"],
+textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 16px;
+}
+
+/* Стили для чекбоксов аллергенов */
+ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 16px;
+}
+
+ul li {
+    margin-bottom: 8px;
+}
+
+ul li label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+ul li input[type="checkbox"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+}
+</style>
 {% endblock %}

@@ -93,16 +93,18 @@ def user_create_allergen(request):
 @login_required
 def create_dish(request):
     if request.method == 'POST':
-        form = DishForm(request.POST, user=request.user)
+        form = DishForm(request.POST, request.FILES, user=request.user) 
         if form.is_valid():
             dish = form.save(commit=False)
             dish.user = request.user
             dish.save()
             form.save_m2m()
-            messages.success(request, f"User's dish {dish.name} was successfully created")
+            
+            messages.success(request, f"Блюдо '{dish.name}' успешно создано!")
             return redirect('create_dish')
     else:
         form = DishForm(user=request.user)
+    
     return render(request, 'main/dish_form.html', {'form': form})
 
 
@@ -206,11 +208,17 @@ class DishesListView(LoginRequiredMixin, ListView):
             context[f'current_{key}'] = self.request.GET.get(key, '')
         
         filtered_dishes = context['dishes']
+        def safe_average(values):
+            valid_values = [v for v in values if v is not None]
+            return sum(valid_values) / len(valid_values) if valid_values else 0
+
         if filtered_dishes:
-            context['avg_calories'] = sum(d.calories for d in filtered_dishes) / len(filtered_dishes)
-            context['avg_protein'] = sum(d.proteins for d in filtered_dishes) / len(filtered_dishes)
-            context['avg_fat'] = sum(d.fats for d in filtered_dishes) / len(filtered_dishes)
-            context['avg_carbs'] = sum(d.carbohydrates for d in filtered_dishes) / len(filtered_dishes)
+            context['avg_calories'] = safe_average(d.calories for d in filtered_dishes)
+            context['avg_protein'] = safe_average(d.proteins for d in filtered_dishes)
+            context['avg_fat'] = safe_average(d.fats for d in filtered_dishes)
+            context['avg_carbs'] = safe_average(d.carbohydrates for d in filtered_dishes)
+        else:
+            context['avg_calories'] = context['avg_protein'] = context['avg_fat'] = context['avg_carbs'] = 0
         
         context['sort_options'] = [
             {'value': '-created_at', 'label': 'Новые сначала'},

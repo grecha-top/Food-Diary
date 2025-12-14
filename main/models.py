@@ -62,6 +62,12 @@ class Dish(models.Model):
     allergens = models.ManyToManyField(Allergen, verbose_name='Аллергены', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления блюда')
 
+    photo = models.ImageField(
+        upload_to='',
+        blank=True,
+        null=True,
+        verbose_name="Фотография блюда"
+    )
     def __str__(self):
         return self.name
 
