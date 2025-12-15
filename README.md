@@ -83,7 +83,7 @@ python manage.py runserver
 
 ## Screenshots
 1. Приветственная страница
-img width="1857" height="913" alt="Pasted image 20251215152818" src="https://github.com/user-attachments/assets/674ab61a-95f2-4eda-b21c-32cd6fd257b3" />
+<img width="1857" height="913" alt="Pasted image 20251215152818" src="https://github.com/user-attachments/assets/674ab61a-95f2-4eda-b21c-32cd6fd257b3" />
 
 2. Профиль
 <img width="1881" height="916" alt="Pasted image 20251215152948" src="https://github.com/user-attachments/assets/52f92563-3c59-4ffe-9c3f-d892c3988440" />
