@@ -10,5 +10,9 @@ urlpatterns = [
     path('allergens/global/add/', views.admin_create_allergen, name='admin_create_allergen'),
     path('my/allergen/add', views.user_create_allergen, name='user_create_allergen'),
     path('dishes/create/', views.create_dish, name='create_dish'),
+<<<<<<< HEAD
     path('dishes/', views.DishesListView.as_view(), name='dishes'),
+=======
+    path('dishes/', views.DishesListView.as_view(), name='dishes')
+>>>>>>> f4632b9 (Commit before merging)
 ]

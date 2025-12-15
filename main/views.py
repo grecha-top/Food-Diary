@@ -164,12 +164,12 @@ def create_dish(request):
             request.FILES,
             user=request.user
         )
+
         if form.is_valid():
             dish = form.save(commit=False)
             dish.user = request.user
             dish.save()
             form.save_m2m()
-
             messages.success(
                 request,
                 f"Блюдо «{dish.name}» успешно создано!"
@@ -332,3 +332,5 @@ class DishesListView(LoginRequiredMixin, ListView):
             context['avg_carbs'] = 0
 
         return context
+
+

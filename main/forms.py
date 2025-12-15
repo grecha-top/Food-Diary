@@ -1,9 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Allergen, Dish
+from models import Allergen, Dish
 import os
-
 
 class UserAdminForm(forms.ModelForm):
     """
@@ -313,3 +312,4 @@ class DishForm(forms.ModelForm):
                 'Углеводы не могут быть отрицательными'
             )
         return carbohydrates
+
