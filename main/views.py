@@ -4,11 +4,18 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponse
 from django.views.generic import ListView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q
+from django.views.generic.edit import DeleteView, UpdateView
+from django.urls import reverse_lazy
 
-from .forms import *
-from .models import *
+from .forms import (
+    CustomUserCreationForm,
+    GlobalAllergenForm,
+    UserAllergenForm,
+    DishForm,
+)
+from .models import Allergen, Dish
 
 
 def home(request):
@@ -82,14 +89,13 @@ def staff_required(user):
 
 
 @login_required
-@user_passes_test(staff_required, login_url='/login/')
 def admin_create_allergen(request):
     """
-    Создание глобальных аллергенов администратором.
-
-    Доступно только пользователям с правами администратора.
+    Просмотр глобальных аллергенов. Создание/изменение — только для админа.
     """
     if request.method == 'POST':
+        if not request.user.is_staff:
+            return redirect('admin_create_allergen')
         form = GlobalAllergenForm(request.POST)
         if form.is_valid():
             allergen = form.save(commit=False)
@@ -103,7 +109,7 @@ def admin_create_allergen(request):
             )
             return redirect('admin_create_allergen')
     else:
-        form = GlobalAllergenForm()
+        form = GlobalAllergenForm() if request.user.is_staff else None
 
     global_allergens = Allergen.objects.filter(
         is_global=True
@@ -147,7 +153,10 @@ def user_create_allergen(request):
     return render(
         request,
         'main/user_create_allergen.html',
-        {'form': form, 'allergens': user_allergens}
+        {
+            'form': form,
+            'allergens': user_allergens,
+        }
     )
 
 
@@ -213,8 +222,19 @@ class DishesListView(LoginRequiredMixin, ListView):
             dish_ids = [dish.id for dish in queryset]
             queryset = Dish.objects.filter(id__in=dish_ids)
 
+        queryset = self.apply_filters(queryset)
         queryset = self.apply_sorting(queryset)
         return queryset
+
+    def get_available_allergens(self):
+        """
+        Возвращает список глобальных и пользовательских аллергенов
+        для фильтрации.
+        """
+        return (
+            Allergen.objects.filter(is_global=True) |
+            Allergen.objects.filter(created_by=self.request.user)
+        ).order_by('name').distinct()
 
     def apply_filters(self, queryset):
         """
@@ -261,6 +281,14 @@ class DishesListView(LoginRequiredMixin, ListView):
                 created_at__date__lte=created_before
             )
 
+        exclude_allergens = self.request.GET.getlist('exclude_allergens')
+        if exclude_allergens:
+            try:
+                allergen_ids = [int(a) for a in exclude_allergens]
+                queryset = queryset.exclude(allergens__id__in=allergen_ids).distinct()
+            except (ValueError, TypeError):
+                pass
+
         return queryset
 
     def apply_sorting(self, queryset):
@@ -304,6 +332,10 @@ class DishesListView(LoginRequiredMixin, ListView):
             context[f'current_{key}'] = self.request.GET.get(key, '')
 
         filtered_dishes = context['dishes']
+        context['available_allergens'] = self.get_available_allergens()
+        context['current_exclude_allergens'] = [
+            int(a) for a in self.request.GET.getlist('exclude_allergens') if a.isdigit()
+        ]
 
         def safe_average(values):
             valid_values = [v for v in values if v is not None]
@@ -332,5 +364,125 @@ class DishesListView(LoginRequiredMixin, ListView):
             context['avg_carbs'] = 0
 
         return context
+
+class UpdateDishView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Dish
+    form_class = DishForm
+    template_name = 'main/dish_form.html'
+    success_url = reverse_lazy('dishes')
+
+    def get_queryset(self):
+        """
+        Ограничивает набор редактируемых блюд владельцем.
+        Администратор может редактировать любое блюдо.
+        """
+        qs = Dish.objects.all()
+        if self.request.user.is_staff:
+            return qs
+        return qs.filter(user=self.request.user)
+
+    def get_form_kwargs(self):
+        """
+        Передаёт текущего пользователя в форму,
+        чтобы подставить его аллергены.
+        """
+        kwargs = super().get_form_kwargs()
+        dish = getattr(self, 'object', None) or self.get_object()
+        # Админ редактирует блюдо — всё равно подставляем владельца блюда,
+        # чтобы не давать выбирать его собственные аллергены.
+        kwargs['user'] = dish.user if dish else self.request.user
+        return kwargs
+
+    def test_func(self):
+        dish = self.get_object()
+        return (
+            dish.user == self.request.user
+            or self.request.user.is_staff
+        )
+
+class DeleteDishView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Dish
+    form_class = DishForm
+    template_name = 'main/dish_form.html'
+    success_url = reverse_lazy('dishes')
+
+    def get_queryset(self):
+        qs = Dish.objects.all()
+        if self.request.user.is_staff:
+            return qs
+        return qs.filter(user=self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def test_func(self):
+        dish = self.get_object()
+        return (dish.user==self.request.user or self.request.user.is_staff)
+
+class UpdateAllergenView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Allergen
+    form_class = UserAllergenForm
+    template_name = 'main/user_allergen_form.html'
+    success_url = reverse_lazy('user_create_allergen')
+    def get_queryset(self):
+        return Allergen.objects.filter(created_by=self.request.user)
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def test_func(self):
+        allergen = self.get_object()
+        return allergen.created_by==self.request.user
+
+class DeleteAllergenView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Allergen
+    template_name = 'main/user_allergen_form.html'
+    success_url = reverse_lazy('user_create_allergen')
+
+    def get_queryset(self):
+        return Allergen.objects.filter(created_by=self.request.user)
+
+    def test_func(self):
+        allergen = self.get_object()
+        return allergen.created_by==self.request.user
+
+
+class UpdateGlobalAllergenView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Allergen
+    form_class = GlobalAllergenForm
+    template_name = 'main/admin_create_allergen.html'
+    success_url = reverse_lazy('admin_create_allergen')
+
+    def get_queryset(self):
+        return Allergen.objects.filter(is_global=True)
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['allergens'] = Allergen.objects.filter(is_global=True).order_by('name')
+        return context
+
+
+class DeleteGlobalAllergenView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Allergen
+    template_name = 'main/admin_create_allergen.html'
+    success_url = reverse_lazy('admin_create_allergen')
+
+    def get_queryset(self):
+        return Allergen.objects.filter(is_global=True)
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get(self, request, *args, **kwargs):
+        # Подтверждение не нужно — удаляем только по POST.
+        return self.post(request, *args, **kwargs)
+
 
 

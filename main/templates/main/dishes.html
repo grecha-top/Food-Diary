@@ -101,7 +101,7 @@
         
         <!-- Категория (если есть в модели) -->
         {% if categories %}
-        <div class="form-group">
+        <div class="form-group" style="grid-column: span 2;">
             <label class="form-label">Категория</label>
             <select name="category" class="form-control">
                 <option value="">Все категории</option>
@@ -114,7 +114,30 @@
             </select>
         </div>
         {% endif %}
-        
+
+        <!-- Исключить аллергены -->
+        <div class="form-group" style="grid-column: span 4;">
+            <label class="form-label">Исключить блюда с аллергенами</label>
+            <div class="chip-list" style="max-height: 200px; overflow: auto; display: flex; flex-wrap: wrap; gap: 8px;">
+                {% for allergen in available_allergens %}
+                    <label class="chip" style="cursor: pointer; display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px;">
+                        <input type="checkbox"
+                               name="exclude_allergens"
+                               value="{{ allergen.id }}"
+                               {% if allergen.id in current_exclude_allergens %}checked{% endif %}>
+                        <span>{{ allergen.name }}</span>
+                        {% if not allergen.is_global %}
+                            <span class="badge">мой</span>
+                        {% else %}
+                            <span class="badge">глобальный</span>
+                        {% endif %}
+                    </label>
+                {% empty %}
+                    <span class="muted">Нет доступных аллергенов</span>
+                {% endfor %}
+            </div>
+        </div>
+
         <!-- Сортировка с фиолетовым фоном -->
         <div class="form-group">
             <label class="form-label">Сортировка</label>
@@ -286,6 +309,11 @@
                         👁️ Фото
                     </button>
                 {% endif %}
+                <a class="btn btn-primary" href="{% url 'dish_edit' dish.pk %}">Изменить</a>
+                <form method="post" action="{% url 'dish_delete' dish.pk %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Удалить это блюдо?');">Удалить</button>
+                </form>
             </div>
         </div>
 

@@ -13,18 +13,33 @@
         <a class="back-link" href="{% url 'home' %}">← В основное меню</a>
     </div>
 
+    {% if user.is_staff %}
     <form method="post" style="margin-top: 16px;">
         {% csrf_token %}
         {{ form.as_p }}
         <button class="btn btn-primary" type="submit">Добавить глобальный аллерген</button>
     </form>
+    {% else %}
+    <div class="card" style="margin-top: 16px; background: var(--bg-secondary);">
+        <p class="muted" style="margin: 0;">Только администраторы могут добавлять и изменять глобальные аллергены.</p>
+    </div>
+    {% endif %}
 
     <h3 class="section-title">Существующие глобальные аллергены</h3>
     <ul class="chip-list">
         {% for a in allergens %}
-            <li>
-                {{ a.name }}
+            <li style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span>{{ a.name }}</span>
                 <span class="badge">добавил: {{ a.created_by.username }}</span>
+                {% if user.is_staff %}
+                <span style="margin-left: auto; display: inline-flex; gap: 6px;">
+                    <a class="btn btn-ghost" href="{% url 'global_allergen_edit' a.pk %}">Изменить</a>
+                    <form method="post" action="{% url 'global_allergen_delete' a.pk %}" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Удалить глобальный аллерген «{{ a.name }}»?');">Удалить</button>
+                    </form>
+                </span>
+                {% endif %}
             </li>
         {% empty %}
             <li class="muted">Нет глобальных аллергенов</li>

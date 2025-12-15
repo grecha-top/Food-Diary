@@ -22,13 +22,21 @@
     <h3 class="section-title">Ваши аллергены</h3>
     <ul class="chip-list">
         {% for a in allergens %}
-            <li>
-                {{ a.name }}
+            <li style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span>{{ a.name }}</span>
                 <span class="badge">{{ a.created_at|date:"d.m.Y" }}</span>
+                <span style="margin-left: auto; display: inline-flex; gap: 6px;">
+                    <a class="btn btn-ghost" href="{% url 'allergen_edit' a.pk %}">Изменить</a>
+                    <form method="post" action="{% url 'allergen_delete' a.pk %}" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Удалить аллерген «{{ a.name }}»?');">Удалить</button>
+                    </form>
+                </span>
             </li>
         {% empty %}
             <li class="muted">У вас пока нет своих аллергенов</li>
         {% endfor %}
     </ul>
+
 </section>
 {% endblock %}

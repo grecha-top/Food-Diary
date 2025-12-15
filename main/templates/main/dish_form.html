@@ -67,8 +67,55 @@
             {% endif %}
         </div>
         
-        {{ form.as_p }}
-        
+        {% if form.non_field_errors %}
+            <div style="color: #ef4444; margin-bottom: 12px;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+            {% if field.name != 'photo' and field.name != 'allergens' %}
+                <div class="form-group">
+                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="muted" style="margin: 4px 0 0; font-size: 0.9rem;">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div style="color: #ef4444; font-size: 0.9rem;">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Аллергены -->
+        <div class="form-group">
+            <label class="form-label">Аллергены</label>
+            <div class="chip-list" style="max-height: 220px; overflow: auto; display: flex; flex-wrap: wrap; gap: 8px;">
+                {% for allergen in form.fields.allergens.queryset %}
+                    <label class="chip" style="cursor: pointer; display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px;">
+                        <input type="checkbox"
+                               name="{{ form.allergens.html_name }}"
+                               value="{{ allergen.id }}"
+                               {% if allergen.id in form.initial.allergens or allergen in form.instance.allergens.all %}checked{% endif %}>
+                        <span>{{ allergen.name }}</span>
+                        {% if not allergen.is_global %}
+                            <span class="badge">мой</span>
+                        {% else %}
+                            <span class="badge">глобальный</span>
+                        {% endif %}
+                    </label>
+                {% empty %}
+                    <span class="muted">Нет доступных аллергенов</span>
+                {% endfor %}
+            </div>
+            {% if form.allergens.errors %}
+                <div style="color: #ef4444; font-size: 0.9rem; margin-top: 4px;">
+                    {{ form.allergens.errors }}
+                </div>
+            {% endif %}
+        </div>
+
         <button class="btn btn-primary" type="submit">Сохранить блюдо</button>
     </form>
 </section>

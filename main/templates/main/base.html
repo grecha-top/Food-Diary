@@ -24,9 +24,7 @@
                     <a href="{% url 'dishes' %}" class="nav-link">Мои блюда</a>
                     <a href="{% url 'create_dish' %}" class="nav-link">Добавить блюдо</a>
                     <a href="{% url 'user_create_allergen' %}" class="nav-link">Мои аллергены</a>
-                    {% if user.is_staff %}
-                        <a href="{% url 'admin_create_allergen' %}" class="nav-link">Глобальные аллергены</a>
-                    {% endif %}
+                    <a href="{% url 'admin_create_allergen' %}" class="nav-link">Глобальные аллергены</a>
                     <a href="{% url 'logout' %}" class="btn btn-ghost">Выйти</a>
                 {% else %}
                     <a href="{% url 'login' %}" class="btn btn-ghost">Войти</a>

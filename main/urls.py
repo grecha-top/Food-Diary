@@ -8,11 +8,13 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile_view, name='profile'),
     path('allergens/global/add/', views.admin_create_allergen, name='admin_create_allergen'),
+    path('allergens/global/<int:pk>/edit/', views.UpdateGlobalAllergenView.as_view(), name='global_allergen_edit'),
+    path('allergens/global/<int:pk>/delete/', views.DeleteGlobalAllergenView.as_view(), name='global_allergen_delete'),
     path('my/allergen/add', views.user_create_allergen, name='user_create_allergen'),
+    path('my/allergen/<int:pk>/edit/', views.UpdateAllergenView.as_view(), name='allergen_edit'),
+    path('my/allergen/<int:pk>/delete/', views.DeleteAllergenView.as_view(), name='allergen_delete'),
     path('dishes/create/', views.create_dish, name='create_dish'),
-<<<<<<< HEAD
     path('dishes/', views.DishesListView.as_view(), name='dishes'),
-=======
-    path('dishes/', views.DishesListView.as_view(), name='dishes')
->>>>>>> f4632b9 (Commit before merging)
+    path('dishes/<int:pk>/edit/', views.UpdateDishView.as_view(), name='dish_edit'),
+    path('dishes/<int:pk>/delete/', views.DeleteDishView.as_view(), name='dish_delete')
 ]
