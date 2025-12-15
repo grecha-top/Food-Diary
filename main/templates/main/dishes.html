@@ -16,13 +16,17 @@
         <div class="card glow">
             <div class="stat">
                 <span class="label">Всего блюд</span>
-                <span class="value">{{ dishes|length }}</span>
+                <span class="value">{{ dishes.paginator.count|default:dishes|length }}</span>
             </div>
             <div class="stat">
                 <span class="label">Недавно добавлено</span>
                 <span class="value">
                     {% if dishes %}
-                        {{ dishes.0.created_at|date:"d.m.Y H:i" }}
+                        {% if dishes.0.created_at %}
+                            {{ dishes.0.created_at|date:"d.m.Y H:i" }}
+                        {% else %}
+                            {{ dishes.0.created_at|date:"d.m.Y H:i" }}
+                        {% endif %}
                     {% else %}
                         —
                     {% endif %}
@@ -32,7 +36,233 @@
     </div>
 </section>
 
+<!-- Форма фильтров -->
+<section class="card glow" style="margin-top: 16px;">
+    <h2 class="title" style="margin-bottom: 12px;">Фильтры</h2>
+    <form method="get" class="grid cols-4 gap-sm">
+        <!-- Поиск по названию -->
+        <div class="form-group">
+            <label class="form-label">Название</label>
+            <input type="text" name="name" class="form-control" 
+                   value="{{ current_name|default:'' }}" placeholder="Поиск...">
+        </div>
+        
+        <!-- Калории -->
+        <div class="form-group">
+            <label class="form-label">Калории</label>
+            <div class="grid cols-2 gap-xs">
+                <input type="number" step="0.1" name="calories_min" 
+                       class="form-control" placeholder="от"
+                       value="{{ current_calories_min|default:'' }}">
+                <input type="number" step="0.1" name="calories_max" 
+                       class="form-control" placeholder="до"
+                       value="{{ current_calories_max|default:'' }}">
+            </div>
+        </div>
+        
+        <!-- Белки -->
+        <div class="form-group">
+            <label class="form-label">Белки (г)</label>
+            <div class="grid cols-2 gap-xs">
+                <input type="number" step="0.1" name="protein_min" 
+                       class="form-control" placeholder="от"
+                       value="{{ current_protein_min|default:'' }}">
+                <input type="number" step="0.1" name="protein_max" 
+                       class="form-control" placeholder="до"
+                       value="{{ current_protein_max|default:'' }}">
+            </div>
+        </div>
+        
+        <!-- Жиры -->
+        <div class="form-group">
+            <label class="form-label">Жиры (г)</label>
+            <div class="grid cols-2 gap-xs">
+                <input type="number" step="0.1" name="fat_min" 
+                       class="form-control" placeholder="от"
+                       value="{{ current_fat_min|default:'' }}">
+                <input type="number" step="0.1" name="fat_max" 
+                       class="form-control" placeholder="до"
+                       value="{{ current_fat_max|default:'' }}">
+            </div>
+        </div>
+        
+        <!-- Углеводы -->
+        <div class="form-group">
+            <label class="form-label">Углеводы (г)</label>
+            <div class="grid cols-2 gap-xs">
+                <input type="number" step="0.1" name="carbs_min" 
+                       class="form-control" placeholder="от"
+                       value="{{ current_carbs_min|default:'' }}">
+                <input type="number" step="0.1" name="carbs_max" 
+                       class="form-control" placeholder="до"
+                       value="{{ current_carbs_max|default:'' }}">
+            </div>
+        </div>
+        
+        <!-- Категория (если есть в модели) -->
+        {% if categories %}
+        <div class="form-group">
+            <label class="form-label">Категория</label>
+            <select name="category" class="form-control">
+                <option value="">Все категории</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" 
+                    {% if current_category == category.id|stringformat:"i" %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        
+        <!-- Сортировка с фиолетовым фоном -->
+        <div class="form-group">
+            <label class="form-label">Сортировка</label>
+            <select name="sort_by" class="form-control" style="
+                background-color: #7c3aed;
+                color: white;
+                border: 1px solid #8b5cf6;
+                padding: 8px 12px;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            ">
+                <option value="-created_at" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-created_at" or not current_sort %}selected{% endif %}>
+                    Новые сначала
+                </option>
+                <option value="created_at" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "created_at" %}selected{% endif %}>
+                    Старые сначала
+                </option>
+                <option value="name" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "name" %}selected{% endif %}>
+                    Название А-Я
+                </option>
+                <option value="-name" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-name" %}selected{% endif %}>
+                    Название Я-А
+                </option>
+                <option value="calories" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "calories" %}selected{% endif %}>
+                    Калории (по возрастанию)
+                </option>
+                <option value="-calories" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-calories" %}selected{% endif %}>
+                    Калории (по убыванию)
+                </option>
+                <option value="protein" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "protein" %}selected{% endif %}>
+                    Белки (по возрастанию)
+                </option>
+                <option value="-protein" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-protein" %}selected{% endif %}>
+                    Белки (по убыванию)
+                </option>
+                <option value="fat" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "fat" %}selected{% endif %}>
+                    Жиры (по возрастанию)
+                </option>
+                <option value="-fat" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-fat" %}selected{% endif %}>
+                    Жиры (по убыванию)
+                </option>
+                <option value="carbohydrates" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "carbohydrates" %}selected{% endif %}>
+                    Углеводы (по возрастанию)
+                </option>
+                <option value="-carbohydrates" 
+                        style="background-color: #7c3aed; color: white;"
+                        {% if current_sort == "-carbohydrates" %}selected{% endif %}>
+                    Углеводы (по убыванию)
+                </option>
+            </select>
+        </div>
+        
+        <!-- Кнопки -->
+        <div class="form-group" style="display: flex; gap: 8px; align-items: flex-end;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Применить фильтры</button>
+            <a href="{% url 'dishes' %}" class="btn btn-ghost">Сбросить</a>
+        </div>
+    </form>
+    
+    <!-- CSS стили для выпадающего списка -->
+    <style>
+        select[name="sort_by"] option {
+            background-color: #7c3aed !important;
+            color: white !important;
+        }
+        
+        select[name="sort_by"]:hover {
+            background-color: #6d28d9 !important;
+        }
+        
+        select[name="sort_by"]:focus {
+            outline: 2px solid #8b5cf6;
+            outline-offset: 2px;
+        }
+    </style>
+</section>
+
 {% if dishes %}
+<!-- Статистика по фильтрам -->
+<section class="card glow" style="margin-top: 12px;">
+    <div class="grid cols-4 gap-sm">
+        <div class="stat">
+            <span class="label">Средние калории</span>
+            <span class="value">
+                {% if avg_calories %}
+                    {{ avg_calories|floatformat:1 }} ккал
+                {% else %}
+                    —
+                {% endif %}
+            </span>
+        </div>
+        <div class="stat">
+            <span class="label">Средние белки</span>
+            <span class="value">
+                {% if avg_protein %}
+                    {{ avg_protein|floatformat:1 }} г
+                {% else %}
+                    —
+                {% endif %}
+            </span>
+        </div>
+        <div class="stat">
+            <span class="label">Средние жиры</span>
+            <span class="value">
+                {% if avg_fat %}
+                    {{ avg_fat|floatformat:1 }} г
+                {% else %}
+                    —
+                {% endif %}
+            </span>
+        </div>
+        <div class="stat">
+            <span class="label">Средние углеводы</span>
+            <span class="value">
+                {% if avg_carbs %}
+                    {{ avg_carbs|floatformat:1 }} г
+                {% else %}
+                    —
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</section>
+
+<!-- Список блюд -->
 <section class="grid cols-2" style="margin-top: 20px;">
     {% for dish in dishes %}
     <article class="card glow">
@@ -44,9 +274,19 @@
                     <p class="muted" style="margin: 0 0 10px;">{{ dish.description }}</p>
                 {% endif %}
             </div>
-            {% if dish.url %}
-                <a class="btn btn-ghost" href="{{ dish.url }}" target="_blank" rel="noopener">Рецепт</a>
-            {% endif %}
+            <div class="btn-group" style="display: flex; gap: 8px;">
+                {% if dish.url %}
+                    <a class="btn btn-ghost" href="{{ dish.url }}" target="_blank" rel="noopener">Рецепт</a>
+                {% endif %}
+                {% if dish.photo %}
+                    <button type="button" 
+                            class="btn btn-ghost view-photo-btn" 
+                            data-photo-url="{% if dish.photo %}{{ dish.photo.url }}{% else %}#{% endif %}"
+                            data-dish-name="{{ dish.name }}">
+                        👁️ Фото
+                    </button>
+                {% endif %}
+            </div>
         </div>
 
         <div class="grid cols-2" style="margin-top: 8px;">
@@ -79,7 +319,34 @@
     </article>
     {% endfor %}
 </section>
+
+<!-- Пагинация -->
+{% if dishes.paginator.num_pages > 1 %}
+<section class="card glow" style="margin-top: 16px; text-align: center;">
+    <div class="pagination">
+        {% if dishes.has_previous %}
+            <a href="?page=1{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               class="btn btn-ghost">Первая</a>
+            <a href="?page={{ dishes.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               class="btn btn-ghost">←</a>
+        {% endif %}
+        
+        <span class="pagination-info">
+            Страница {{ dishes.number }} из {{ dishes.paginator.num_pages }}
+        </span>
+        
+        {% if dishes.has_next %}
+            <a href="?page={{ dishes.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               class="btn btn-ghost">→</a>
+            <a href="?page={{ dishes.paginator.num_pages }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               class="btn btn-ghost">Последняя</a>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
 {% else %}
+<!-- Сообщение, если нет блюд -->
 <section class="card glow" style="margin-top: 16px; text-align: center;">
     <h2 class="title" style="margin-bottom: 6px;">Пока нет блюд</h2>
     <p class="muted">Добавьте своё первое блюдо и отслеживайте калории и аллергены.</p>
@@ -88,5 +355,124 @@
     </div>
 </section>
 {% endif %}
-{% endblock %}
 
+<!-- Модальное окно для просмотра фото -->
+<div id="photo-modal" class="modal" style="
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    align-items: center;
+    justify-content: center;
+">
+    <div class="modal-content" style="
+        max-width: 90%;
+        max-height: 90%;
+        background: transparent;
+        position: relative;
+    ">
+        <span class="close-btn" style="
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        ">&times;</span>
+        
+        <img id="modal-photo" src="" alt="Фото блюда" style="
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        ">
+        
+        <div id="photo-caption" style="
+            color: white;
+            text-align: center;
+            margin-top: 16px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        "></div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('photo-modal');
+    const modalPhoto = document.getElementById('modal-photo');
+    const photoCaption = document.getElementById('photo-caption');
+    const closeBtn = document.querySelector('.close-btn');
+    const viewPhotoBtns = document.querySelectorAll('.view-photo-btn');
+    
+    // Открытие модального окна при клике на кнопку "Фото"
+    viewPhotoBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const photoUrl = this.getAttribute('data-photo-url');
+            const dishName = this.getAttribute('data-dish-name');
+            
+            modalPhoto.src = photoUrl;
+            photoCaption.textContent = dishName;
+            modal.style.display = 'flex';
+        });
+    });
+    
+    // Закрытие модального окна
+    closeBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+    
+    // Закрытие при клике вне изображения
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    
+    // Закрытие по клавише ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            modal.style.display = 'none';
+        }
+    });
+    
+    // Предотвращаем закрытие при клике на само изображение
+    modalPhoto.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+});
+</script>
+
+<style>
+.modal {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.view-photo-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.close-btn:hover {
+    background: rgba(0, 0, 0, 0.7) !important;
+}
+</style>
+{% endblock %}

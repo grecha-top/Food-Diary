@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 class User(models.Model):
@@ -17,7 +18,13 @@ class User(models.Model):
 class Allergen(models.Model):
     name = models.TextField(verbose_name='Название аллергена')
     is_global = models.BooleanField(verbose_name='Глобальный аллерген')
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Создал')
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Создал'
+    )
 
     def __str__(self):
         return self.name
@@ -39,7 +46,12 @@ class Allergen(models.Model):
         ]
 
 class Dish(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', null=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+        null=False
+    )
     name = models.TextField(max_length=100, verbose_name='Название блюда', null=False)
     description = models.TextField(verbose_name='Описание и комментарии к блюду', blank=True, null=True)
     calories = models.FloatField(verbose_name='Калории', blank=True, null=True)
@@ -50,6 +62,12 @@ class Dish(models.Model):
     allergens = models.ManyToManyField(Allergen, verbose_name='Аллергены', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления блюда')
 
+    photo = models.ImageField(
+        upload_to='',
+        blank=True,
+        null=True,
+        verbose_name="Фотография блюда"
+    )
     def __str__(self):
         return self.name
 
