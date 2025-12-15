@@ -403,7 +403,7 @@ class UpdateDishView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 class DeleteDishView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Dish
     form_class = DishForm
-    template_name = 'main/dish_form.html'
+    template_name = 'main/dish_confirm_delete.html'
     success_url = reverse_lazy('dishes')
 
     def get_queryset(self):
@@ -440,7 +440,7 @@ class UpdateAllergenView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
 class DeleteAllergenView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Allergen
-    template_name = 'main/user_allergen_form.html'
+    template_name = 'main/user_allergen_confirm_delete.html'
     success_url = reverse_lazy('user_create_allergen')
 
     def get_queryset(self):
@@ -471,7 +471,7 @@ class UpdateGlobalAllergenView(LoginRequiredMixin, UserPassesTestMixin, UpdateVi
 
 class DeleteGlobalAllergenView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Allergen
-    template_name = 'main/admin_create_allergen.html'
+    template_name = 'main/global_allergen_confirm_delete.html'
     success_url = reverse_lazy('admin_create_allergen')
 
     def get_queryset(self):
