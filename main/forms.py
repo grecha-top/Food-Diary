@@ -242,7 +242,10 @@ class DishForm(forms.ModelForm):
         """
         photo = self.cleaned_data.get('photo')
 
-        if photo:
+        # При редактировании photo может быть объектом ImageFieldFile
+        # (уже сохранённым в БД). В этом случае content_type/size отсутствуют,
+        # и проверка не нужна, так как файл уже валидирован ранее.
+        if photo and hasattr(photo, 'content_type'):
             max_size = 5 * 1024 * 1024  # 5MB
             if photo.size > max_size:
                 raise forms.ValidationError(
