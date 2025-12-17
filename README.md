@@ -96,11 +96,10 @@ python manage.py runserver
 
 
 
-## ER-диаграмма
+## Архитектурная диаграмма
 <img width="1834" height="859" alt="Pasted image 20251215154225" src="https://github.com/user-attachments/assets/0b5fe1e8-38ed-42ab-8ece-fa08a4ce82de" />
 
 
-
-## Архитектурная диаграмма
+## ER-диаграмма
 <img width="1279" height="717" alt="Pasted image 20251215154303" src="https://github.com/user-attachments/assets/6726af8c-2355-4458-a56a-eae991663c7f" />
 
