@@ -241,6 +241,14 @@ class DishesListView(LoginRequiredMixin, ListView):
         Применяет фильтры по параметрам запроса
         (калории, БЖУ, дата создания).
         """
+        def parse_float(value):
+            if value is None or value == '':
+                return None
+            try:
+                return float(str(value).replace(',', '.'))
+            except (ValueError, TypeError):
+                return None
+
         filters_map = {
             'calories': ('calories_min', 'calories_max'),
             'proteins': ('protein_min', 'protein_max'),
@@ -249,24 +257,14 @@ class DishesListView(LoginRequiredMixin, ListView):
         }
 
         for field, (min_key, max_key) in filters_map.items():
-            min_value = self.request.GET.get(min_key)
-            max_value = self.request.GET.get(max_key)
+            min_value = parse_float(self.request.GET.get(min_key))
+            max_value = parse_float(self.request.GET.get(max_key))
 
-            if min_value:
-                try:
-                    queryset = queryset.filter(
-                        **{f'{field}__gte': float(min_value)}
-                    )
-                except (ValueError, TypeError):
-                    pass
+            if min_value is not None:
+                queryset = queryset.filter(**{f'{field}__gte': min_value})
 
-            if max_value:
-                try:
-                    queryset = queryset.filter(
-                        **{f'{field}__lte': float(max_value)}
-                    )
-                except (ValueError, TypeError):
-                    pass
+            if max_value is not None:
+                queryset = queryset.filter(**{f'{field}__lte': max_value})
 
         created_after = self.request.GET.get('created_after')
         created_before = self.request.GET.get('created_before')
@@ -402,7 +400,6 @@ class UpdateDishView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
 class DeleteDishView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Dish
-    form_class = DishForm
     template_name = 'main/dish_confirm_delete.html'
     success_url = reverse_lazy('dishes')
 
@@ -412,14 +409,15 @@ class DeleteDishView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             return qs
         return qs.filter(user=self.request.user)
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        return kwargs
-
     def test_func(self):
         dish = self.get_object()
         return (dish.user==self.request.user or self.request.user.is_staff)
+
+    def post(self, request, *args, **kwargs):
+        # Удаляем сразу по POST и перенаправляем на список блюд
+        response = super().post(request, *args, **kwargs)
+        messages.success(request, "Блюдо удалено")
+        return response
 
 class UpdateAllergenView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Allergen
